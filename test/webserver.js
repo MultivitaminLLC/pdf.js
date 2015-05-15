@@ -66,7 +66,6 @@ WebServer.prototype = {
     this.server = null;
   },
   _handler: function (req, res) {
-    var agent = req.headers['user-agent'];
     var url = req.url;
     var urlParts = /([^?]*)((?:\?(.*))?)/.exec(url);
     var pathPart = decodeURI(urlParts[1]), queryPart = urlParts[3];
@@ -175,7 +174,8 @@ WebServer.prototype = {
           res.end();
           return;
         }
-        res.write('<html><body><h1>PDFs of ' + pathPart + '</h1>\n');
+        res.write('<html><head><meta charset=\"utf-8\"></head><body>' +
+                  '<h1>PDFs of ' + pathPart + '</h1>\n');
         if (pathPart !== '/') {
           res.write('<a href=\"..\">..</a><br>\n');
         }

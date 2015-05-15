@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* globals PDFJS, PDFView, PresentationMode */
 
 'use strict';
 
@@ -22,16 +21,16 @@ var PDFHistory = {
   initialized: false,
   initialDestination: null,
 
-  initialize: function pdfHistoryInitialize(fingerprint) {
-    if (PDFJS.disableHistory || PDFView.isViewerEmbedded) {
-      // The browsing history is only enabled when the viewer is standalone,
-      // i.e. not when it is embedded in a web page.
-      return;
-    }
+  /**
+   * @param {string} fingerprint
+   * @param {IPDFLinkService} linkService
+   */
+  initialize: function pdfHistoryInitialize(fingerprint, linkService) {
     this.initialized = true;
     this.reInitialized = false;
     this.allowHashChange = true;
     this.historyUnlocked = true;
+    this.isViewerInPresentationMode = false;
 
     this.previousHash = window.location.hash.substring(1);
     this.currentBookmark = '';
@@ -42,6 +41,7 @@ var PDFHistory = {
     this.nextHashParam = '';
 
     this.fingerprint = fingerprint;
+    this.linkService = linkService;
     this.currentUid = this.uid = 0;
     this.current = {};
 
@@ -52,7 +52,7 @@ var PDFHistory = {
       if (state.target.dest) {
         this.initialDestination = state.target.dest;
       } else {
-        PDFView.initialBookmark = state.target.hash;
+        linkService.setHash(state.target.hash);
       }
       this.currentUid = state.uid;
       this.uid = state.uid + 1;
@@ -122,6 +122,10 @@ var PDFHistory = {
       // the 'DOMContentLoaded' event is not fired on 'pageshow'.
       window.addEventListener('beforeunload', pdfHistoryBeforeUnload, false);
     }, false);
+
+    window.addEventListener('presentationmodechanged', function(e) {
+      self.isViewerInPresentationMode = !!e.detail.active;
+    });
   },
 
   _isStateObjectDefined: function pdfHistory_isStateObjectDefined(state) {
@@ -203,7 +207,7 @@ var PDFHistory = {
       params.hash = (this.current.hash && this.current.dest &&
                      this.current.dest === params.dest) ?
         this.current.hash :
-        PDFView.getDestinationHash(params.dest).split('#')[1];
+        this.linkService.getDestinationHash(params.dest).split('#')[1];
     }
     if (params.page) {
       params.page |= 0;
@@ -212,7 +216,7 @@ var PDFHistory = {
       var target = window.history.state.target;
       if (!target) {
         // Invoked when the user specifies an initial bookmark,
-        // thus setting PDFView.initialBookmark, when the document is loaded.
+        // thus setting initialBookmark, when the document is loaded.
         this._pushToHistory(params, false);
         this.previousHash = window.location.hash.substring(1);
       }
@@ -286,7 +290,7 @@ var PDFHistory = {
       return null;
     }
     var params = { hash: this.currentBookmark, page: this.currentPage };
-    if (PresentationMode.active) {
+    if (this.isViewerInPresentationMode) {
       params.hash = null;
     }
     return params;
@@ -337,9 +341,9 @@ var PDFHistory = {
     this.historyUnlocked = false;
 
     if (state.target.dest) {
-      PDFView.navigateTo(state.target.dest);
+      this.linkService.navigateTo(state.target.dest);
     } else {
-      PDFView.setHash(state.target.hash);
+      this.linkService.setHash(state.target.hash);
     }
     this.currentUid = state.uid;
     if (state.uid > this.uid) {

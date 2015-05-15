@@ -16,7 +16,8 @@
  */
 /* globals PDFJS, Util, isDict, isName, stringToPDFString, warn, Dict, Stream,
            stringToBytes, assert, Promise, isArray, ObjectLoader, OperatorList,
-           isValidUrl, OPS, createPromiseCapability, AnnotationType */
+           isValidUrl, OPS, createPromiseCapability, AnnotationType, 
+           stringToUTF8String */
 
 'use strict';
 
@@ -79,12 +80,26 @@ var Annotation = (function AnnotationClosure() {
     data.annotationFlags = dict.get('F');
 
     var color = dict.get('C');
-    if (isArray(color) && color.length === 3) {
-      // TODO(mack): currently only supporting rgb; need support different
-      // colorspaces
-      data.color = color;
-    } else {
+    if (!color) {
+      // The PDF spec does not mention how a missing color array is interpreted.
+      // Adobe Reader seems to default to black in this case.
       data.color = [0, 0, 0];
+    } else if (isArray(color)) {
+      switch (color.length) {
+        case 0:
+          // Empty array denotes transparent border.
+          data.color = null;
+          break;
+        case 1:
+          // TODO: implement DeviceGray
+          break;
+        case 3:
+          data.color = color;
+          break;
+        case 4:
+          // TODO: implement DeviceCMYK
+          break;
+      }
     }
 
     // Some types of annotations have border style dict which has more
@@ -101,7 +116,7 @@ var Annotation = (function AnnotationClosure() {
       if (data.borderWidth > 0 && dashArray) {
         if (!isArray(dashArray)) {
           // Ignore the border if dashArray is not actually an array,
-          // this is consistent with the behaviour in Adobe Reader. 
+          // this is consistent with the behaviour in Adobe Reader.
           data.borderWidth = 0;
         } else {
           var dashArrayLength = dashArray.length;
@@ -347,7 +362,7 @@ var WidgetAnnotation = (function WidgetAnnotationClosure() {
       var name = namedItem.get('T');
       if (name) {
         fieldName.unshift(stringToPDFString(name));
-      } else {
+      } else if (parent && ref) {
         // The field name is absent, that means more than one field
         // with the same name may exist. Replacing the empty name
         // with the '`' plus index in the parent's 'Kids' array.
@@ -357,7 +372,7 @@ var WidgetAnnotation = (function WidgetAnnotationClosure() {
         var j, jj;
         for (j = 0, jj = kids.length; j < jj; j++) {
           var kidRef = kids[j];
-          if (kidRef.num == ref.num && kidRef.gen == ref.gen) {
+          if (kidRef.num === ref.num && kidRef.gen === ref.gen) {
             break;
           }
         }
@@ -471,7 +486,7 @@ var LinkAnnotation = (function LinkAnnotationClosure() {
     data.annotationType = AnnotationType.LINK;
 
     var action = dict.get('A');
-    if (action) {
+    if (action && isDict(action)) {
       var linkType = action.get('S').name;
       if (linkType === 'URI') {
         var url = action.get('URI');
@@ -486,7 +501,15 @@ var LinkAnnotation = (function LinkAnnotationClosure() {
         if (!isValidUrl(url, false)) {
           url = '';
         }
-        data.url = url;
+        // According to ISO 32000-1:2008, section 12.6.4.7, 
+        // URI should to be encoded in 7-bit ASCII.
+        // Some bad PDFs may have URIs in UTF-8 encoding, see Bugzilla 1122280.
+        try {
+          data.url = stringToUTF8String(url);
+        } catch (e) {
+          // Fall back to a simple copy.
+          data.url = url;
+        }
       } else if (linkType === 'GoTo') {
         data.dest = action.get('D');
       } else if (linkType === 'GoToR') {
@@ -524,11 +547,7 @@ var LinkAnnotation = (function LinkAnnotationClosure() {
     return url;
   }
 
-  Util.inherit(LinkAnnotation, InteractiveAnnotation, {
-    hasOperatorList: function LinkAnnotation_hasOperatorList() {
-      return false;
-    }
-  });
+  Util.inherit(LinkAnnotation, InteractiveAnnotation, { });
 
   return LinkAnnotation;
 })();
