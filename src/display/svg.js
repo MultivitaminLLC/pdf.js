@@ -130,16 +130,16 @@ var convertImgDataToPng = (function convertImgDataToPngClosure() {
       offsetLiterals += lineSize;
     }
 
-    if (kind === ImageKind.GRAYSCALE_1BPP) {
-      // inverting for B/W
-      offsetLiterals = 0;
-      for (y = 0; y < height; y++) {
-        offsetLiterals++; // skipping predictor
-        for (i = 0; i < lineSize; i++) {
-          literals[offsetLiterals++] ^= 0xFF;
-        }
-      }
-    }
+    //if (kind === ImageKind.GRAYSCALE_1BPP) {
+    //  // inverting for B/W
+    //  offsetLiterals = 0;
+    //  for (y = 0; y < height; y++) {
+    //    offsetLiterals++; // skipping predictor
+    //    for (i = 0; i < lineSize; i++) {
+    //      literals[offsetLiterals++] ^= 0xFF;
+    //    }
+    //  }
+    //}
 
     var ihdr = new Uint8Array([
       width >> 24 & 0xff,
