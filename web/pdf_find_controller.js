@@ -12,9 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* globals PDFJS, FirefoxCom, Promise, scrollIntoView */
 
 'use strict';
+
+(function (root, factory) {
+  if (typeof define === 'function' && define.amd) {
+    define('pdfjs-web/pdf_find_controller', ['exports', 'pdfjs-web/ui_utils'],
+      factory);
+  } else if (typeof exports !== 'undefined') {
+    factory(exports, require('./ui_utils.js'));
+  } else {
+    factory((root.pdfjsWebPDFFindController = {}), root.pdfjsWebUIUtils);
+  }
+}(this, function (exports, uiUtils, firefoxCom) {
+
+var scrollIntoView = uiUtils.scrollIntoView;
 
 var FindStates = {
   FIND_FOUND: 0,
@@ -26,85 +38,69 @@ var FindStates = {
 var FIND_SCROLL_OFFSET_TOP = -50;
 var FIND_SCROLL_OFFSET_LEFT = -400;
 
+var CHARACTERS_TO_NORMALIZE = {
+  '\u2018': '\'', // Left single quotation mark
+  '\u2019': '\'', // Right single quotation mark
+  '\u201A': '\'', // Single low-9 quotation mark
+  '\u201B': '\'', // Single high-reversed-9 quotation mark
+  '\u201C': '"', // Left double quotation mark
+  '\u201D': '"', // Right double quotation mark
+  '\u201E': '"', // Double low-9 quotation mark
+  '\u201F': '"', // Double high-reversed-9 quotation mark
+  '\u00BC': '1/4', // Vulgar fraction one quarter
+  '\u00BD': '1/2', // Vulgar fraction one half
+  '\u00BE': '3/4', // Vulgar fraction three quarters
+};
+
 /**
  * Provides "search" or "find" functionality for the PDF.
  * This object actually performs the search for a given string.
  */
 var PDFFindController = (function PDFFindControllerClosure() {
   function PDFFindController(options) {
-    this.startedTextExtraction = false;
-    this.extractTextPromises = [];
-    this.pendingFindMatches = Object.create(null);
-    this.active = false; // If active, find results will be highlighted.
-    this.pageContents = []; // Stores the text for each page.
-    this.pageMatches = [];
-    this.matchCount = 0;
-    this.selected = { // Currently selected match.
-      pageIdx: -1,
-      matchIdx: -1
-    };
-    this.offset = { // Where the find algorithm currently is in the document.
-      pageIdx: null,
-      matchIdx: null
-    };
-    this.pagesToSearch = null;
-    this.resumePageIdx = null;
-    this.state = null;
-    this.dirtyMatch = false;
-    this.findTimeout = null;
     this.pdfViewer = options.pdfViewer || null;
-    this.integratedFind = options.integratedFind || false;
-    this.charactersToNormalize = {
-      '\u2018': '\'', // Left single quotation mark
-      '\u2019': '\'', // Right single quotation mark
-      '\u201A': '\'', // Single low-9 quotation mark
-      '\u201B': '\'', // Single high-reversed-9 quotation mark
-      '\u201C': '"', // Left double quotation mark
-      '\u201D': '"', // Right double quotation mark
-      '\u201E': '"', // Double low-9 quotation mark
-      '\u201F': '"', // Double high-reversed-9 quotation mark
-      '\u00BC': '1/4', // Vulgar fraction one quarter
-      '\u00BD': '1/2', // Vulgar fraction one half
-      '\u00BE': '3/4', // Vulgar fraction three quarters
-    };
-    this.findBar = options.findBar || null;
 
-    // Compile the regular expression for text normalization once
-    var replace = Object.keys(this.charactersToNormalize).join('');
+    this.onUpdateResultsCount = null;
+    this.onUpdateState = null;
+
+    this.reset();
+
+    // Compile the regular expression for text normalization once.
+    var replace = Object.keys(CHARACTERS_TO_NORMALIZE).join('');
     this.normalizationRegex = new RegExp('[' + replace + ']', 'g');
-
-    var events = [
-      'find',
-      'findagain',
-      'findhighlightallchange',
-      'findcasesensitivitychange'
-    ];
-
-    this.firstPagePromise = new Promise(function (resolve) {
-      this.resolveFirstPage = resolve;
-    }.bind(this));
-    this.handleEvent = this.handleEvent.bind(this);
-
-    for (var i = 0, len = events.length; i < len; i++) {
-      window.addEventListener(events[i], this.handleEvent);
-    }
   }
 
   PDFFindController.prototype = {
-    setFindBar: function PDFFindController_setFindBar(findBar) {
-      this.findBar = findBar;
-    },
-
     reset: function PDFFindController_reset() {
       this.startedTextExtraction = false;
       this.extractTextPromises = [];
-      this.active = false;
+      this.pendingFindMatches = Object.create(null);
+      this.active = false; // If active, find results will be highlighted.
+      this.pageContents = []; // Stores the text for each page.
+      this.pageMatches = [];
+      this.matchCount = 0;
+      this.selected = { // Currently selected match.
+        pageIdx: -1,
+        matchIdx: -1
+      };
+      this.offset = { // Where the find algorithm currently is in the document.
+        pageIdx: null,
+        matchIdx: null
+      };
+      this.pagesToSearch = null;
+      this.resumePageIdx = null;
+      this.state = null;
+      this.dirtyMatch = false;
+      this.findTimeout = null;
+
+      this.firstPagePromise = new Promise(function (resolve) {
+        this.resolveFirstPage = resolve;
+      }.bind(this));
     },
 
     normalize: function PDFFindController_normalize(text) {
-      var self = this;
       return text.replace(this.normalizationRegex, function (ch) {
-        return self.charactersToNormalize[ch];
+        return CHARACTERS_TO_NORMALIZE[ch];
       });
     },
 
@@ -186,18 +182,18 @@ var PDFFindController = (function PDFFindControllerClosure() {
       extractPageText(0);
     },
 
-    handleEvent: function PDFFindController_handleEvent(e) {
-      if (this.state === null || e.type !== 'findagain') {
+    executeCommand: function PDFFindController_executeCommand(cmd, state) {
+      if (this.state === null || cmd !== 'findagain') {
         this.dirtyMatch = true;
       }
-      this.state = e.detail;
+      this.state = state;
       this.updateUIState(FindStates.FIND_PENDING);
 
       this.firstPagePromise.then(function() {
         this.extractText();
 
         clearTimeout(this.findTimeout);
-        if (e.type === 'find') {
+        if (cmd === 'find') {
           // Only trigger the find action after 250ms of silence.
           this.findTimeout = setTimeout(this.nextMatch.bind(this), 250);
         } else {
@@ -395,25 +391,20 @@ var PDFFindController = (function PDFFindControllerClosure() {
 
     updateUIResultsCount:
         function PDFFindController_updateUIResultsCount() {
-      if (this.findBar === null) {
-        throw new Error('PDFFindController is not initialized with a ' +
-          'PDFFindBar instance.');
+      if (this.onUpdateResultsCount) {
+        this.onUpdateResultsCount(this.matchCount);
       }
-      this.findBar.updateResultsCount(this.matchCount);
     },
 
     updateUIState: function PDFFindController_updateUIState(state, previous) {
-      if (this.integratedFind) {
-        FirefoxCom.request('updateFindControlState',
-                           { result: state, findPrevious: previous });
-        return;
+      if (this.onUpdateState) {
+        this.onUpdateState(state, previous, this.matchCount);
       }
-      if (this.findBar === null) {
-        throw new Error('PDFFindController is not initialized with a ' +
-                        'PDFFindBar instance.');
-      }
-      this.findBar.updateUIState(state, previous, this.matchCount);
     }
   };
   return PDFFindController;
 })();
+
+exports.FindStates = FindStates;
+exports.PDFFindController = PDFFindController;
+}));

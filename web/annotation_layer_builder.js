@@ -12,15 +12,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/*globals PDFJS, mozL10n, SimpleLinkService */
 
 'use strict';
+
+(function (root, factory) {
+  if (typeof define === 'function' && define.amd) {
+    define('pdfjs-web/annotation_layer_builder', ['exports',
+      'pdfjs-web/ui_utils', 'pdfjs-web/pdf_link_service',
+      'pdfjs-web/pdfjs'], factory);
+  } else if (typeof exports !== 'undefined') {
+    factory(exports, require('./ui_utils.js'),
+      require('./pdf_link_service.js'), require('./pdfjs.js'));
+  } else {
+    factory((root.pdfjsWebAnnotationLayerBuilder = {}), root.pdfjsWebUIUtils,
+      root.pdfjsWebPDFLinkService, root.pdfjsWebPDFJS);
+  }
+}(this, function (exports, uiUtils, pdfLinkService, pdfjsLib) {
+
+var mozL10n = uiUtils.mozL10n;
+var SimpleLinkService = pdfLinkService.SimpleLinkService;
 
 /**
  * @typedef {Object} AnnotationLayerBuilderOptions
  * @property {HTMLDivElement} pageDiv
  * @property {PDFPage} pdfPage
  * @property {IPDFLinkService} linkService
+ * @property {DownloadManager} downloadManager
  */
 
 /**
@@ -35,6 +52,7 @@ var AnnotationLayerBuilder = (function AnnotationLayerBuilderClosure() {
     this.pageDiv = options.pageDiv;
     this.pdfPage = options.pdfPage;
     this.linkService = options.linkService;
+    this.downloadManager = options.downloadManager;
 
     this.div = null;
   }
@@ -59,13 +77,14 @@ var AnnotationLayerBuilder = (function AnnotationLayerBuilderClosure() {
           div: self.div,
           annotations: annotations,
           page: self.pdfPage,
-          linkService: self.linkService
+          linkService: self.linkService,
+          downloadManager: self.downloadManager
         };
 
         if (self.div) {
           // If an annotationLayer already exists, refresh its children's
           // transformation matrices.
-          PDFJS.AnnotationLayer.update(parameters);
+          pdfjsLib.AnnotationLayer.update(parameters);
         } else {
           // Create an annotation layer div and render the annotations
           // if there is at least one annotation.
@@ -78,7 +97,7 @@ var AnnotationLayerBuilder = (function AnnotationLayerBuilderClosure() {
           self.pageDiv.appendChild(self.div);
           parameters.div = self.div;
 
-          PDFJS.AnnotationLayer.render(parameters);
+          pdfjsLib.AnnotationLayer.render(parameters);
           if (typeof mozL10n !== 'undefined') {
             mozL10n.translate(self.div);
           }
@@ -116,3 +135,7 @@ DefaultAnnotationLayerFactory.prototype = {
     });
   }
 };
+
+exports.AnnotationLayerBuilder = AnnotationLayerBuilder;
+exports.DefaultAnnotationLayerFactory = DefaultAnnotationLayerFactory;
+}));
