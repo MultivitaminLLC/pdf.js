@@ -1,0 +1,79 @@
+body {
+  background: white;
+}
+
+#toolbarViewerLeft,
+#toolbarViewerMiddle,
+#toolbarViewerRight {
+  display: none;
+}
+
+#loadingBar {
+  background: none;
+  border-bottom: none;
+  position: absolute;
+  top: 0;
+  height: 2px;
+  width: 100% !important;
+}
+
+#loadingBar .progress {
+  background-color: #6699FF;
+}
+
+html[dir='ltr'] #toolbarContainer {
+  background: none;
+  height: 48px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.4);
+}
+
+#toolbarViewer {
+  height: 48px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font: 17px OpenSans;
+  color: #333;
+}
+
+#rtb-document-title {
+  padding-right: 70px;
+  padding-left: 20px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  width: 100%;
+  overflow: hidden;
+}
+
+#rtb-close-btn {
+  position: absolute;
+  right: 0;
+  width: 70px;
+  height: 48px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #84adff;
+}
+
+#viewerContainer {
+  top: 48px;
+}
+
+#viewerContainer::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+#viewerContainer::-webkit-scrollbar-thumb {
+  background-color: #bcbcbc;
+  border: 0 solid transparent;
+}
+
+.pdfViewer .page {
+  border-image: none;
+}
+
+.pdfViewer .canvasWrapper {
+  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+}

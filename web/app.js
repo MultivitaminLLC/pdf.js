@@ -1261,6 +1261,10 @@ function webViewerInitialized() {
 //#if GENERIC
   var queryString = document.location.search.substring(1);
   var params = parseQueryString(queryString);
+
+  var filename = 'filename' in params ? params.filename : '';
+  document.getElementById('rtb-document-title').innerHTML = filename
+
   var file = 'file' in params ? params.file : DEFAULT_URL;
 //#endif
 //#if (FIREFOX || MOZCENTRAL)
