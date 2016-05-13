@@ -41,9 +41,6 @@ See https://github.com/adobe-type-tools/cmap-resources
 
     <link rel="stylesheet" href="viewer.css">
     <link rel="stylesheet" href="viewer.rtb.css">
-<!--#if !PRODUCTION-->
-    <link rel="resource" type="application/l10n" href="locale/locale.properties">
-<!--#endif-->
 
 <!--#if !(MOZCENTRAL || CHROME || MINIFIED)-->
     <script src="compatibility.js"></script>
@@ -66,7 +63,6 @@ See https://github.com/adobe-type-tools/cmap-resources
 <!--#endif-->
 
 <!--#if !MINIFIED -->
-    <script src="debugger.js"></script>
     <script src="viewer.js"></script>
 <!--#else-->
 <!--#include viewer-snippet-minified.html-->
