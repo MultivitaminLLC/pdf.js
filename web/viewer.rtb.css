@@ -1,5 +1,5 @@
 body {
-  background: white;
+  background: #999;
 }
 
 #toolbarViewerLeft,
@@ -22,7 +22,7 @@ body {
 }
 
 html[dir='ltr'] #toolbarContainer {
-  background: none;
+  background: white;
   height: 48px;
   box-shadow: 0 0 10px rgba(0,0,0,0.4);
 }
@@ -61,7 +61,7 @@ html[dir='ltr'] #toolbarContainer {
 }
 
 #viewerContainer::-webkit-scrollbar {
-  width: 4px;
+  width: 0;
   height: 4px;
 }
 
@@ -72,8 +72,27 @@ html[dir='ltr'] #toolbarContainer {
 
 .pdfViewer .page {
   border-image: none;
+  border: 3px solid transparent;
 }
 
 .pdfViewer .canvasWrapper {
-  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.6);
+}
+
+#pages-floating-block {
+  position: absolute;
+  top: 70px;
+  left: 28px;
+  display: flex;
+  background: #F1EFEF;
+  z-index: 1;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  padding: 10px;
+  color: rgba(0, 0, 0, 0.5);
+  font-weight: bold;
+  font: 17px OpenSans;
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out;
 }

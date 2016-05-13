@@ -128,6 +128,8 @@ var PDFViewer = (function pdfViewer() {
     this.downloadManager = options.downloadManager || null;
     this.removePageBorders = options.removePageBorders || false;
 
+    this.pagesFloatingBlock = document.getElementById('pages-floating-block')
+
     this.defaultRenderingQueue = !options.renderingQueue;
     if (this.defaultRenderingQueue) {
       // Custom rendering queue is not specified, using default one
@@ -400,10 +402,35 @@ var PDFViewer = (function pdfViewer() {
       if (this.pagesCount === 0) {
         return;
       }
+
+      this._updatePagesFloatingBlock()
+
       this.update();
       for (var i = 0, ii = this._pages.length; i < ii; i++) {
         this._pages[i].updatePosition();
       }
+    },
+
+    _updatePagesFloatingBlock: function rtbPdfViewer_updatePagesFloatingBlock() {
+      var pfb = this.pagesFloatingBlock
+      if (!pfb) {
+        return
+      }
+
+      if (this._pfbDisplayTimerId) {
+        clearTimeout(this._pfbDisplayTimerId)
+      }
+
+      var newText = this._currentPageNumber + ' of ' + this.pagesCount;
+      if (!this._pfbOldText || this._pfbOldText !== newText) {
+        this._pfbOldText = newText;
+        pfb.innerHTML = newText;
+      }
+
+      pfb.style.opacity = '0.9';
+      this._pfbDisplayTimerId = setTimeout(function () {
+        pfb.style.opacity = '0'
+      }, 1000)
     },
 
     _setScaleDispatchEvent: function pdfViewer_setScaleDispatchEvent(
