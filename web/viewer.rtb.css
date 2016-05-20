@@ -23,22 +23,22 @@ body {
 
 html[dir='ltr'] #toolbarContainer {
   background: white;
-  height: 48px;
+  height: 56px;
   box-shadow: 0 0 10px rgba(0,0,0,0.4);
 }
 
 #toolbarViewer {
-  height: 48px;
+  height: 56px;
   display: flex;
   justify-content: center;
   align-items: center;
-  font: 17px OpenSans;
-  color: #333;
+  font: 16px OpenSans;
+  color: #4a4a4a;
 }
 
 #rtb-document-title {
   padding-right: 70px;
-  padding-left: 20px;
+  padding-left: 16px;
   white-space: nowrap;
   text-overflow: ellipsis;
   width: 100%;
@@ -49,15 +49,15 @@ html[dir='ltr'] #toolbarContainer {
   position: absolute;
   right: 0;
   width: 70px;
-  height: 48px;
+  height: 56px;
   display: flex;
   justify-content: center;
   align-items: center;
-  color: #84adff;
+  color: #6699ff;
 }
 
 #viewerContainer {
-  top: 48px;
+  top: 56px;
 }
 
 #viewerContainer::-webkit-scrollbar {
@@ -82,17 +82,18 @@ html[dir='ltr'] #toolbarContainer {
 #pages-floating-block {
   position: absolute;
   top: 70px;
-  left: 28px;
+  left: 20px;
   display: flex;
-  background: #F1EFEF;
+  background: #eeeeee;
   z-index: 1;
   align-items: center;
   justify-content: center;
-  border-radius: 5px;
-  padding: 10px;
-  color: rgba(0, 0, 0, 0.5);
-  font-weight: bold;
-  font: 17px OpenSans;
-  opacity: 0;
+  border-radius: 4px;
+  height: 32px;
+  color: #9b9b9b;
+  font: 16px OpenSans;
+  font-weight: 600;
+  padding: 0 10px;
+  pointer-events: none;
   transition: opacity 0.15s ease-in-out;
 }
