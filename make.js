@@ -140,7 +140,8 @@ target.generic = function() {
       ['web/compressed.tracemonkey-pldi-09.pdf', GENERIC_DIR + '/web'],
       ['external/bcmaps/*', GENERIC_DIR + '/web/cmaps/'],
       ['web/locale', GENERIC_DIR + '/web'],
-      ['web/viewer.rtb.css', GENERIC_DIR + '/web']
+      ['web/viewer.rtb.css', GENERIC_DIR + '/web'],
+      ['external/fonts/*', GENERIC_DIR + '/web/fonts/']
     ],
     preprocess: [
       [COMMON_WEB_FILES_PREPROCESS, GENERIC_DIR + '/web']
