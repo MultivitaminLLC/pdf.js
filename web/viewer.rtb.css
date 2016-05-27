@@ -84,6 +84,15 @@ html[dir='ltr'] #toolbarContainer {
 .pdfViewer .page {
   border-image: none;
   border: 3px solid transparent;
+  margin: 10px auto 0 auto;
+}
+
+.pdfViewer .page:first-child {
+  margin-top: 4px;
+}
+
+.pdfViewer .page:last-child {
+  margin-bottom: 4px;
 }
 
 .pdfViewer .canvasWrapper {
