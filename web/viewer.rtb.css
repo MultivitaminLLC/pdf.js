@@ -10,7 +10,32 @@
 }
 
 body {
-  background: #999;
+  background: #999;  /* same in PdjJsViewer.ts */
+}
+
+body.openedInWebView .toolbar {
+  display: none;
+}
+
+body.openedInWebView #viewerContainer {
+  top: 0;
+}
+
+body.openedInWebView #pages-floating-block {
+  top: 20px;
+}
+
+body.openedInWebView #loadingBar {
+  background: #fff;
+  top: 0;
+}
+
+body.openedInWebView #loadingBar .progress {
+  background-color: #3158a4;
+}
+
+body:not(.openedInWebView) #loadingBar {
+  bottom: 0;
 }
 
 #toolbarViewerLeft,
@@ -23,7 +48,6 @@ body {
   background: none;
   border-bottom: none;
   position: absolute;
-  bottom: 0;
   height: 2px;
   width: 100% !important;
 }

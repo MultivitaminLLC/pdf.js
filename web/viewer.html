@@ -63,6 +63,13 @@ See https://github.com/adobe-type-tools/cmap-resources
 <!--#endif-->
 
 <!--#if !MINIFIED -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        if (location.search.indexOf('openedInWebView') !== -1) {
+          document.body.classList.add('openedInWebView')
+        }
+      })
+    </script>
     <script src="viewer.js"></script>
 <!--#else-->
 <!--#include viewer-snippet-minified.html-->
